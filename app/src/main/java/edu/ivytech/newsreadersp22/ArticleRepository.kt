@@ -30,7 +30,8 @@ class ArticleRepository private constructor(private val context : Context) {
     private val nytApi : NYTApi
     init {
         val retrofitNYT : Retrofit = Retrofit.Builder()
-            .baseUrl("https://api.nytimes.com/svc/movies/v2/reviews/")
+            //.baseUrl("https://api.nytimes.com/svc/movies/v2/reviews/")
+            .baseUrl("https://api.nytimes.com/svc/topstories/v2/")
             .addConverterFactory(GsonConverterFactory.create())
             .build()
         nytApi = retrofitNYT.create(NYTApi::class.java)
@@ -47,8 +48,10 @@ class ArticleRepository private constructor(private val context : Context) {
                 {
                     for(a in articles)
                     {
-                        val date = SimpleDateFormat("yyyy-mm-dd", Locale.US).parse(a.date)
-                        val article = Article(a.title, date, a.link.url, a.description)
+                        //val date = SimpleDateFormat("yyyy-mm-dd", Locale.US).parse(a.date)
+                        val date = SimpleDateFormat("yyyy-mm-dd'T'HH:mm:ssZ", Locale.US).parse(a.date)
+                        //val article = Article(a.title, date, a.link.url, a.description)
+                        val article = Article(a.title, date, a.link, a.description)
                         responseData += article
                     }
                     insertArticles(responseData)
@@ -65,12 +68,14 @@ class ArticleRepository private constructor(private val context : Context) {
     }
 
     //https://api.nytimes.com/svc/movies/v2/reviews/picks.json?api-key=ER6zIML0n1M6Dkdquqy7yHPtUgfkOcn3
+    //https://api.nytimes.com/svc/topstories/v2/movies.json?api-key=ER6zIML0n1M6Dkdquqy7yHPtUgfkOcn3
 
 
     private fun insertArticles(responseData: List<Article>) {
-
+        executor.execute{articleDao.deleteArticles()
         for (a in responseData){
             insertArticle(a)
+        }
         }
 
     }
