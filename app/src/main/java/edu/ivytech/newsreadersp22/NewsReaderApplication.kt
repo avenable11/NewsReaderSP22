@@ -6,5 +6,6 @@ class NewsReaderApplication : Application() {
         override fun onCreate() {
             super.onCreate()
             ArticleRepository.initialize(this)
+            ArticleRepository.get().fetchArticles()
         }
 }

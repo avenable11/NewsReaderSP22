@@ -1,10 +1,20 @@
 package edu.ivytech.newsreadersp22
 
 import android.content.Context
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.room.Room
+import edu.ivytech.newsreadersp22.api.NYTApi
+import edu.ivytech.newsreadersp22.api.NYTArticle
+import edu.ivytech.newsreadersp22.api.NYTResponse
 import edu.ivytech.newsreadersp22.database.Article
 import edu.ivytech.newsreadersp22.database.ArticleDatabase
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
+import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.Executor
 import java.util.concurrent.Executors
@@ -17,8 +27,44 @@ class ArticleRepository private constructor(private val context : Context) {
         DATABASE_NAME).build()
     private val articleDao = database.articleDao()
     private val executor : Executor = Executors.newSingleThreadExecutor()
+    private val nytApi : NYTApi
+    init {
+        val retrofitNYT : Retrofit = Retrofit.Builder()
+            .baseUrl("https://api.nytimes.com/svc/movies/v2/reviews/")
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+        nytApi = retrofitNYT.create(NYTApi::class.java)
+    }
+    fun fetchArticles() {
+        val responseData : MutableList<Article> = mutableListOf()
+        val nytRequest : Call<NYTResponse> = nytApi.downloadArticles()
+        nytRequest.enqueue(object : Callback<NYTResponse>{
+            override fun onResponse(call: Call<NYTResponse>, response: Response<NYTResponse>) {
+                Log.d(TAG, "Response Received")
+                val nytResponse : NYTResponse? = response.body()
+                val articles : List<NYTArticle>? = nytResponse?.results
+                if(articles != null)
+                {
+                    for(a in articles)
+                    {
+                        val date = SimpleDateFormat("yyyy-mm-dd", Locale.US).parse(a.date)
+                        val article = Article(a.title, date, a.link.url, a.description)
+                        responseData += article
+                    }
+                    insertArticles(responseData)
+                } else {
+                    Log.e(TAG, "Response is coming back null")
+                }
+            }
 
+            override fun onFailure(call: Call<NYTResponse>, t: Throwable) {
+                Log.e(TAG, "Failed to fetch articles", t)
+            }
 
+        })
+    }
+
+    //https://api.nytimes.com/svc/movies/v2/reviews/picks.json?api-key=ER6zIML0n1M6Dkdquqy7yHPtUgfkOcn3
 
 
     private fun insertArticles(responseData: List<Article>) {
@@ -32,7 +78,7 @@ class ArticleRepository private constructor(private val context : Context) {
     fun getArticles() : LiveData<List<Article>> = articleDao.getArticles()
     fun getArticle(id : UUID) : LiveData<Article?> = articleDao.getArticle(id)
 
-    fun insertArticle(article: Article)
+    private fun insertArticle(article: Article)
     {
         executor.execute{
             articleDao.insertArticle(article)
