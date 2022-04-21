@@ -3,6 +3,7 @@ package edu.ivytech.newsreadersp22
 import android.content.Context
 import android.util.Log
 import androidx.lifecycle.LiveData
+import androidx.preference.PreferenceManager
 import androidx.room.Room
 import edu.ivytech.newsreadersp22.api.*
 import edu.ivytech.newsreadersp22.database.Article
@@ -44,58 +45,62 @@ class ArticleRepository private constructor(private val context : Context) {
     }
     fun fetchArticles() {
         val responseData : MutableList<Article> = mutableListOf()
-        /*val nytRequest : Call<NYTResponse> = nytApi.downloadArticles()
-        nytRequest.enqueue(object : Callback<NYTResponse>{
-            override fun onResponse(call: Call<NYTResponse>, response: Response<NYTResponse>) {
-                Log.d(TAG, "Response Received")
-                val nytResponse : NYTResponse? = response.body()
-                val articles : List<NYTArticle>? = nytResponse?.results
-                if(articles != null)
-                {
-                    for(a in articles)
-                    {
-                        //val date = SimpleDateFormat("yyyy-mm-dd", Locale.US).parse(a.date)
-                        val date = SimpleDateFormat("yyyy-mm-dd'T'HH:mm:ssZ", Locale.US).parse(a.date)
-                        //val article = Article(a.title, date, a.link.url, a.description)
-                        val article = Article(a.title, date, a.link, a.description)
-                        responseData += article
+        val prefs = PreferenceManager.getDefaultSharedPreferences(context)
+        var source = prefs.getString("source", "nyt")
+        if(source == null)
+            source = "nyt"
+        if(source == "nyt") {
+            val nytRequest: Call<NYTResponse> = nytApi.downloadArticles()
+            nytRequest.enqueue(object : Callback<NYTResponse> {
+                override fun onResponse(call: Call<NYTResponse>, response: Response<NYTResponse>) {
+                    Log.d(TAG, "Response Received")
+                    val nytResponse: NYTResponse? = response.body()
+                    val articles: List<NYTArticle>? = nytResponse?.results
+                    if (articles != null) {
+                        for (a in articles) {
+                            //val date = SimpleDateFormat("yyyy-mm-dd", Locale.US).parse(a.date)
+                            val date =
+                                SimpleDateFormat("yyyy-mm-dd'T'HH:mm:ssZ", Locale.US).parse(a.date)
+                            //val article = Article(a.title, date, a.link.url, a.description)
+                            val article = Article(a.title, date, a.link, a.description)
+                            responseData += article
+                        }
+                        insertArticles(responseData)
+                    } else {
+                        Log.e(TAG, "Response is coming back null")
                     }
-                    insertArticles(responseData)
-                } else {
-                    Log.e(TAG, "Response is coming back null")
                 }
-            }
-
-            override fun onFailure(call: Call<NYTResponse>, t: Throwable) {
-                Log.e(TAG, "Failed to fetch articles", t)
-            }
-
-        })*/
-
-        val cnnRequest : Call<CNNResponse> = cnnApi.downloadArticles()
-        cnnRequest.enqueue(object : Callback<CNNResponse>{
-            override fun onResponse(call: Call<CNNResponse>, response: Response<CNNResponse>) {
-                val cnnResponse : CNNResponse? = response.body()
-                val articles : List<CNNArticle>? = cnnResponse?.articles
-                if(articles != null) {
-                    for(a in articles) {
-                       val date = SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss 'GMT'", Locale.US)
-                           .parse(a.date)
-                        val article = Article(a.title, date, a.link, a.description)
-                        responseData += article
+                override fun onFailure(call: Call<NYTResponse>, t: Throwable) {
+                    Log.e(TAG, "Failed to fetch articles", t)
+                }
+            })
+        } else {
+            val cnnRequest: Call<CNNResponse> = cnnApi.downloadArticles()
+            cnnRequest.enqueue(object : Callback<CNNResponse> {
+                override fun onResponse(call: Call<CNNResponse>, response: Response<CNNResponse>) {
+                    val cnnResponse: CNNResponse? = response.body()
+                    val articles: List<CNNArticle>? = cnnResponse?.articles
+                    if (articles != null) {
+                        for (a in articles) {
+                            val date =
+                                SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss 'GMT'", Locale.US)
+                                    .parse(a.date)
+                            val article = Article(a.title, date, a.link, a.description)
+                            responseData += article
+                        }
+                        insertArticles(responseData)
+                    } else {
+                        Log.e(TAG, "Response is coming back null")
                     }
-                    insertArticles(responseData)
-                } else {
-                    Log.e(TAG, "Response is coming back null")
+
                 }
 
-            }
+                override fun onFailure(call: Call<CNNResponse>, t: Throwable) {
+                    Log.e(TAG, "Failed to fetch articles", t)
+                }
 
-            override fun onFailure(call: Call<CNNResponse>, t: Throwable) {
-                Log.e(TAG, "Failed to fetch articles", t)
-            }
-
-        })
+            })
+        }
     }
 
     //https://api.nytimes.com/svc/movies/v2/reviews/picks.json?api-key=ER6zIML0n1M6Dkdquqy7yHPtUgfkOcn3

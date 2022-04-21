@@ -1,0 +1,12 @@
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <ListPreference
+        android:defaultValue="nyt"
+        android:entries="@array/source_entries"
+        android:entryValues="@array/source_values"
+        android:key="source"
+        android:title="@string/source_title" />
+    <PreferenceCategory app:title="@string/period_header"/>
+
+</PreferenceScreen>
