@@ -2,6 +2,7 @@
     <string name="app_name">NewsReaderSP22</string>
     <string name="apiKey">AWjPeE3hqlzvrQxyhaA9il60sTG2ofX8</string>
     <string name="title_activity_settings">SettingsActivity</string>
+    <string name="notification_channel_name">NewsReader</string>
 
     <!-- Preference Titles -->
     <string name="messages_header">Messages</string>
@@ -17,4 +18,8 @@
     <string name="attachment_summary_on">Automatically download attachments for incoming emails
     </string>
     <string name="attachment_summary_off">Only download attachments when manually requested</string>
+
+
+    <string name="new_articles_title">New NewsReader Articles</string>
+    <string name="new_articles_text">You have new articles in NewsReader</string>
 </resources>
