@@ -5,6 +5,8 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
+import androidx.work.OneTimeWorkRequest
+import androidx.work.WorkManager
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -22,6 +24,11 @@ class MainActivity : AppCompatActivity() {
             R.id.settings -> {
                 val intent = Intent(this, SettingsActivity::class.java)
                 startActivity(intent)
+                true
+            }
+            R.id.refresh -> {
+                val workRequest = OneTimeWorkRequest.Builder(DownloadWorker::class.java).build()
+                WorkManager.getInstance(this).enqueue(workRequest)
                 true
             }
             else -> {
