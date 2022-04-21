@@ -8,6 +8,7 @@ import androidx.room.Room
 import edu.ivytech.newsreadersp22.api.*
 import edu.ivytech.newsreadersp22.database.Article
 import edu.ivytech.newsreadersp22.database.ArticleDatabase
+import edu.ivytech.newsreadersp22.database.migrations_1_2
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -24,7 +25,9 @@ private const val TAG = "Article Repo"
 class ArticleRepository private constructor(private val context : Context) {
     private val database : ArticleDatabase = Room.databaseBuilder(context,
         ArticleDatabase::class.java,
-        DATABASE_NAME).build()
+        DATABASE_NAME)
+        .addMigrations(migrations_1_2)
+        .build()
     private val articleDao = database.articleDao()
     private val executor : Executor = Executors.newSingleThreadExecutor()
     private val nytApi : NYTApi
@@ -108,11 +111,11 @@ class ArticleRepository private constructor(private val context : Context) {
 
 
     private fun insertArticles(responseData: List<Article>) {
-        executor.execute{articleDao.deleteArticles()
+        changeHistory()
         for (a in responseData){
             insertArticle(a)
         }
-        }
+
 
     }
 
@@ -125,6 +128,16 @@ class ArticleRepository private constructor(private val context : Context) {
             articleDao.insertArticle(article)
         }
     }
+
+    fun getNewArticles() : Int = articleDao.getNewArticles()
+    fun changeHistory() {
+        executor.execute {
+            articleDao.deleteHistory()
+            articleDao.copyHistory()
+            articleDao.deleteArticles()
+        }
+    }
+
 
     companion object {
         private var INSTANCE : ArticleRepository? = null

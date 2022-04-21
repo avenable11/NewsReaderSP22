@@ -17,6 +17,15 @@ interface ArticleDao {
     @Query("Delete from Article")
     fun deleteArticles()
 
+    @Query("Delete from ArticleHistory")
+    fun deleteHistory()
+
+    @Query("insert into articlehistory select * from article")
+    fun copyHistory()
+
+    @Query("Select count(*) from Article where title not in (select title from ArticleHistory)")
+    fun getNewArticles() : Int
+
     @Insert
     fun insertArticle(article : Article)
 }

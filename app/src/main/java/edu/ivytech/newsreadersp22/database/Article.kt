@@ -10,3 +10,10 @@ data class Article(var title:String = "",
                    var url:String? = "",
                    var description:String = "",
                    @PrimaryKey val uuid: UUID = UUID.randomUUID())
+
+@Entity
+data class ArticleHistory(var title:String = "",
+                   var pubDate: Date? = Date(),
+                   var url:String? = "",
+                   var description:String = "",
+                   @PrimaryKey val uuid: UUID = UUID.randomUUID())
